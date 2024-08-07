@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>記憶力遊戲</title>
+    <style>
+        #game-board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .card {
+            width: 100px;
+            height: 100px;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-board"></div>
+    <button id="start-btn">開始遊戲</button>
+    <div id="timer"></div>
+    <div id="message"></div>
+
+    <script>
+        const gameBoard = document.getElementById('game-board');
+        const startBtn = document.getElementById('start-btn');
+        const timerDisplay = document.getElementById('timer');
+        const messageDisplay = document.getElementById('message');
+        let numbers = [];
+        let currentNumber = 1;
+        let timeLeft = 10;
+        let timerInterval;
+        let level = 1;
+
+        function createBoard() {
+            gameBoard.innerHTML = '';
+            numbers = Array.from({length: 9}, (_, i) => i + 1);
+            numbers.sort(() => Math.random() - 0.5);
+            
+            for (let i = 0; i < 9; i++) {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.dataset.number = numbers[i];
+                card.textContent = numbers[i];
+                card.addEventListener('click', checkCard);
+                gameBoard.appendChild(card);
+            }
+        }
+
+        function startGame() {
+            createBoard();
+            startBtn.disabled = true;
+            timeLeft = 11 - level; // 每關減少1秒
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+
+        function updateTimer() {
+            timeLeft--;
+            timerDisplay.textContent = `剩餘時間: ${timeLeft}秒`;
+            if (timeLeft === 0) {
+                clearInterval(timerInterval);
+                hideNumbers();
+            }
+        }
+
+        function hideNumbers() {
+            document.querySelectorAll('.card').forEach(card => {
+                card.textContent = '';
+            });
+        }
+
+        function checkCard(e) {
+            if (timeLeft > 0) return;
+            const clickedNumber = parseInt(e.target.dataset.number);
+            if (clickedNumber === currentNumber) {
+                e.target.style.backgroundColor = 'green';
+                currentNumber++;
+                if (currentNumber > 9) {
+                    clearInterval(timerInterval);
+                    messageDisplay.textContent = '恭喜過關！';
+                    level++;
+                    startBtn.disabled = false;
+                    startBtn.textContent = '開始下一關';
+                    currentNumber = 1;
+                }
+            } else {
+                e.target.style.backgroundColor = 'red';
+                setTimeout(() => {
+                    e.target.style.backgroundColor = '#f0f0f0';
+                }, 300);
+            }
+        }
+
+        startBtn.addEventListener('click', startGame);
+    </script>
+</body>
+</html>
