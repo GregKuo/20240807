@@ -1,65 +1,58 @@
 <!DOCTYPE html>
-<html lang="zh-Hant-TW">
+<html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>台股即時股價</title>
+    <title>中油無鉛汽油價格查詢</title>
     <style>
-        table {
-            border-collapse: collapse;
-            width: 100%;
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
         }
-        th, td {
-            border: 1px solid black;
-            padding: 8px;
-            text-align: left;
+        .container {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
-        th {
-            background-color: #f2f2f2;
+        h1 {
+            text-align: center;
+        }
+        .fuel-price {
+            margin: 20px 0;
         }
     </style>
 </head>
 <body>
-    <h1>台股即時股價</h1>
-    <table id="stockTable">
-        <tr>
-            <th>股票代碼</th>
-            <th>公司名稱</th>
-            <th>成交價</th>
-            <th>漲跌</th>
-            <th>漲跌幅</th>
-        </tr>
-    </table>
+    <div class="container">
+        <h1>中油無鉛汽油價格查詢</h1>
+        <div class="fuel-price" id="price-92">92 無鉛汽油: </div>
+        <div class="fuel-price" id="price-95">95 無鉛汽油: </div>
+        <div class="fuel-price" id="price-98">98 無鉛汽油: </div>
+    </div>
 
     <script>
-        const stockCodes = ['2330', '2317', '2454']; // 您可以根據需要添加或修改股票代碼
-
-        function fetchStockData() {
-            const apiUrl = 'https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_AVG_ALL';
-
+        document.addEventListener('DOMContentLoaded', function() {
+            const apiUrl = 'https://vipmbr.cpc.com.tw/opendata/sixtypeoillistprice';
+            
             fetch(apiUrl)
                 .then(response => response.json())
                 .then(data => {
-                    const tableBody = document.getElementById('stockTable');
-                    tableBody.innerHTML = '<tr><th>股票代碼</th><th>公司名稱</th><th>成交價</th><th>漲跌</th><th>漲跌幅</th></tr>';
-
-                    stockCodes.forEach(code => {
-                        const stock = data.find(item => item.Code === code);
-                        if (stock) {
-                            const row = tableBody.insertRow();
-                            row.insertCell(0).textContent = stock.Code;
-                            row.insertCell(1).textContent = stock.Name;
-                            row.insertCell(2).textContent = stock.ClosingPrice;
-                            row.insertCell(3).textContent = stock.Change;
-                            row.insertCell(4).textContent = stock.ChangePercent + '%';
-                        }
-                    });
+                    const fuelPrices = data.queryOilListPrice;
+                    const price92 = fuelPrices.find(item => item.prodname === '92無鉛汽油');
+                    const price95 = fuelPrices.find(item => item.prodname === '95無鉛汽油');
+                    const price98 = fuelPrices.find(item => item.prodname === '98無鉛汽油');
+                    
+                    document.getElementById('price-92').innerText = `92 無鉛汽油: ${price92.price} 元/公升`;
+                    document.getElementById('price-95').innerText = `95 無鉛汽油: ${price95.price} 元/公升`;
+                    document.getElementById('price-98').innerText = `98 無鉛汽油: ${price98.price} 元/公升`;
                 })
-                .catch(error => console.error('Error:', error));
-        }
-
-        fetchStockData();
-        setInterval(fetchStockData, 60000); // 每分鐘更新一次數據
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                });
+        });
     </script>
 </body>
 </html>
