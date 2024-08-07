@@ -3,103 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>記憶力遊戲</title>
+    <title>台股即時股價</title>
     <style>
-        #game-board {
-            display: grid;
-            grid-template-columns: repeat(3, 100px);
-            gap: 10px;
-            margin-bottom: 20px;
+        table {
+            border-collapse: collapse;
+            width: 100%;
         }
-        .card {
-            width: 100px;
-            height: 100px;
-            background-color: #f0f0f0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 24px;
-            cursor: pointer;
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
         }
     </style>
 </head>
 <body>
-    <div id="game-board"></div>
-    <button id="start-btn">開始遊戲</button>
-    <div id="timer"></div>
-    <div id="message"></div>
+    <h1>台股即時股價</h1>
+    <table id="stockTable">
+        <tr>
+            <th>股票代碼</th>
+            <th>股票名稱</th>
+            <th>現價</th>
+            <th>漲跌</th>
+            <th>漲跌幅</th>
+        </tr>
+    </table>
 
     <script>
-        const gameBoard = document.getElementById('game-board');
-        const startBtn = document.getElementById('start-btn');
-        const timerDisplay = document.getElementById('timer');
-        const messageDisplay = document.getElementById('message');
-        let numbers = [];
-        let currentNumber = 1;
-        let timeLeft = 10;
-        let timerInterval;
-        let level = 1;
+        const stockCodes = ['2330', '2454', '2317', '2308', '2881']; // 股票代碼列表
+        const stockTable = document.getElementById('stockTable');
 
-        function createBoard() {
-            gameBoard.innerHTML = '';
-            numbers = Array.from({length: 9}, (_, i) => i + 1);
-            numbers.sort(() => Math.random() - 0.5);
-            
-            for (let i = 0; i < 9; i++) {
-                const card = document.createElement('div');
-                card.className = 'card';
-                card.dataset.number = numbers[i];
-                card.textContent = numbers[i];
-                card.addEventListener('click', checkCard);
-                gameBoard.appendChild(card);
-            }
-        }
-
-        function startGame() {
-            createBoard();
-            startBtn.disabled = true;
-            timeLeft = 11 - level; // 每關減少1秒
-            timerInterval = setInterval(updateTimer, 1000);
-        }
-
-        function updateTimer() {
-            timeLeft--;
-            timerDisplay.textContent = `剩餘時間: ${timeLeft}秒`;
-            if (timeLeft === 0) {
-                clearInterval(timerInterval);
-                hideNumbers();
-            }
-        }
-
-        function hideNumbers() {
-            document.querySelectorAll('.card').forEach(card => {
-                card.textContent = '';
+        function fetchStockData() {
+            stockCodes.forEach(code => {
+                fetch(`https://api.example.com/stock/${code}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        updateStockRow(data);
+                    })
+                    .catch(error => console.error('Error:', error));
             });
         }
 
-        function checkCard(e) {
-            if (timeLeft > 0) return;
-            const clickedNumber = parseInt(e.target.dataset.number);
-            if (clickedNumber === currentNumber) {
-                e.target.style.backgroundColor = 'green';
-                currentNumber++;
-                if (currentNumber > 9) {
-                    clearInterval(timerInterval);
-                    messageDisplay.textContent = '恭喜過關！';
-                    level++;
-                    startBtn.disabled = false;
-                    startBtn.textContent = '開始下一關';
-                    currentNumber = 1;
+        function updateStockRow(data) {
+            let row = document.getElementById(`stock-${data.code}`);
+            if (!row) {
+                row = stockTable.insertRow(-1);
+                row.id = `stock-${data.code}`;
+                for (let i = 0; i < 5; i++) {
+                    row.insertCell(i);
                 }
-            } else {
-                e.target.style.backgroundColor = 'red';
-                setTimeout(() => {
-                    e.target.style.backgroundColor = '#f0f0f0';
-                }, 300);
             }
+            
+            row.cells[0].textContent = data.code;
+            row.cells[1].textContent = data.name;
+            row.cells[2].textContent = data.price;
+            row.cells[3].textContent = data.change;
+            row.cells[4].textContent = data.changePercent + '%';
         }
 
-        startBtn.addEventListener('click', startGame);
+        // 每5秒更新一次數據
+        setInterval(fetchStockData, 5000);
+        fetchStockData(); // 初始加載
     </script>
 </body>
 </html>
